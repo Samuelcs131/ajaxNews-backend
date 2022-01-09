@@ -29,6 +29,12 @@ app.get('/', (req,res)=>{
     res.send('Funcionando!')
 })
 
+app.get('/home', async(req, res)=>{
+    res.send({
+        nome: 'Funcionando perfeitamente!!'
+    })
+})
+
     // NOVO CADASTRO
     app.post('/cadastro/artigo', async (req,res)=>{
 
