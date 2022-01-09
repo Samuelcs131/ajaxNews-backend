@@ -8,13 +8,13 @@ const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 
 /* CONFIG SERVER */
-const connectionDataBase = mysql.createConnection({
+/* const connectionDataBase = mysql.createConnection({
     host     : 'localhost',
     user     : 'root',
     password : 'senha',
     database : 'dataimage'
 })
-connectionDataBase.connect()
+connectionDataBase.connect() */
 
 app.use(cors())
 app.use(fileUpload())
