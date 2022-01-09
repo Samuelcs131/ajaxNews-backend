@@ -8,13 +8,13 @@ const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 
 /* CONFIG SERVER */
-/* const connectionDataBase = mysql.createConnection({
-    host     : 'localhost',
-    user     : 'root',
-    password : 'senha',
-    database : 'dataimage'
+const connectionDataBase = mysql.createConnection({
+    host     : 'us-cdbr-east-05.cleardb.net',
+    user     : 'b3de2a7fe3b263',
+    password : '6919978e',
+    database : 'heroku_9cfce6ba18c6ba1'
 })
-connectionDataBase.connect() */
+connectionDataBase.connect()
 
 app.use(cors())
 app.use(fileUpload())
@@ -29,11 +29,6 @@ app.get('/', (req,res)=>{
     res.send('Funcionando!')
 })
 
-app.get('/home', async(req, res)=>{
-    res.send({
-        nome: 'Funcionando perfeitamente!!'
-    })
-})
 
     // NOVO CADASTRO
     app.post('/cadastro/artigo', async (req,res)=>{
