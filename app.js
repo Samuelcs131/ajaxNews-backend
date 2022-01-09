@@ -179,7 +179,7 @@ app.get('/', (req,res)=>{
 
 
 /* SAIDA */
-const PORT = 8085
+const PORT = process.env.PORT || 8085
 app.listen(PORT, ()=>{
     console.log(`Servidor na porta http://localhost:${PORT}`)
 })
