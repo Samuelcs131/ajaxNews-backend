@@ -1,37 +1,27 @@
-const express = require('express');
-const path = require('path');
-const fileUpload = require('express-fileupload');
-const app = express();
-const mysql = require('mysql2');
-const cors = require('cors');
+const express = require('express')
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
+const routers = express.Router()
 
-/* CONFIG SERVER */
-const connectionDataBase = mysql.createConnection({
-    host     : 'us-cdbr-east-05.cleardb.net',
-    user     : 'b3de2a7fe3b263',
-    password : '6919978e',
-    database : 'heroku_9cfce6ba18c6ba1'
-})
-connectionDataBase.connect()
+const ROOT_PATH = require('app-root-path').path 
+const URL_API = process.env.URL_API + process.env.PORT + '/upload/'
 
-app.use(cors())
-app.use(fileUpload())
-app.use(express.json())
 
+// DATABASE
+const connectionDataBase = require('./database')
+ 
 // DATA HOJE
 function dataNow(func){ return Intl.DateTimeFormat('pt-BR', func).format()} 
 let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),dataNow({month: 'numeric'})]
 
-/* ROTAS */
-app.get('/', (req,res)=>{
-    res.send('Funcionando!')
-})
-
+// ROUTES
+    // ROTA PRINCIPAL
+    routers.get('/', (req,res)=>{
+        res.send('API funcionando!')
+    })
 
     // NOVO CADASTRO
-    app.post('/cadastro/artigo', async (req,res)=>{
+    routers.post('/cadastro/artigo', async (req,res)=>{
 
         try{
         
@@ -72,11 +62,11 @@ app.get('/', (req,res)=>{
                 (erro,result)=>{
 
                     if(erro == null && result !== undefined){
-                        imagem.mv(__dirname+`/upload/${imageUpload}`)
+                        imagem.mv(ROOT_PATH+`/upload/${imageUpload}`)
                         res.status(200).send('Cadastrado com sucesso!')
                         console.log('Cadastrado com sucesso!')
                     } else {
-                        res.status(400).send('Erro ao enviar ')
+                        res.status(400).send('Erro ao enviar!')
                         console.log(erro)
                     }
 
@@ -95,20 +85,35 @@ app.get('/', (req,res)=>{
     })
 
     // CONSULTAR TODOS ARTIGOS
-    app.get('/artigos', async(req,res)=>{
+    routers.get('/artigos', async(req,res)=>{
+
         let querySQL = "SELECT * FROM artigos"
 
         connectionDataBase.query(querySQL, (erro, result)=> {
             if(erro){
                 res.status(400).send('Erro ao procurar')
             } else {
-                res.status(200).send(result)
+                let response = result.map( (artigo => {
+                    return({
+                        id: artigo.id_artigo,
+                        titulo: artigo.titulo,
+                        descricao: artigo.descricao,
+                        categoria: artigo.categoria,
+                        texto: artigo.texto,
+                        autor: artigo.autor,
+                        imagem: URL_API + artigo.imagem,
+                        dataCriacao: artigo.dataCriacao,
+                        dataAtualizacao: artigo.dataAtualizacao
+                    })
+                }))
+
+                res.status(200).send(response)
             }
         })
     })
 
     // CONSULTAR ARTIGO POR ID
-    app.get('/artigo/:id', async(req,res)=>{
+    routers.get('/artigo/:id', async(req,res)=>{
 
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
         
@@ -120,9 +125,22 @@ app.get('/', (req,res)=>{
             }
         })
     })
-    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // DELETAR ARTIGO
-    app.delete('/deletar/artigo/:id', async(req,res)=>{
+    routers.delete('/deletar/artigo/:id', async(req,res)=>{
 
         // PESQUISA ID IMAGEM
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
@@ -135,7 +153,7 @@ app.get('/', (req,res)=>{
 
                 // APAGA FOTO
                 let idImg = result[0].imagem 
-                let deletedFileImg = async () => await fs.unlink(`./upload/${idImg}`)
+                let deletedFileImg = async () => await fs.unlink(`../upload/${idImg}`)
 
                 // APAGA ARTIGO
                 querySQL = "DELETE FROM artigos WHERE id_artigo = ?"
@@ -156,8 +174,22 @@ app.get('/', (req,res)=>{
         })
     })
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
     // ATUALIZAR ARTIGO
-    app.put('/atualizar/artigo/:id', async(req,res)=>{
+    routers.put('/atualizar/artigo/:id', async(req,res)=>{
 
         const {titulo, descricao, categoria, texto, autor} = req.body
         const {imagem} = req.files || 0
@@ -177,19 +209,9 @@ app.get('/', (req,res)=>{
         
     })
 
-    // EXIBIR IMAGEM
-    app.get('/imagem/:id', (req,res)=>{
-        try{
-            res.sendFile(__dirname+'/upload/'+req.params.id)
-            console.log(req.params.id)
-        } catch(erro){
-            res.redirect('/')
-            console.log(erro)
-        }
-    })
 
-/* SAIDA */
-const PORT = process.env.PORT || 8085
-app.listen(PORT, ()=>{
-    console.log(`Servidor na porta http://localhost:${PORT}`)
-})
+
+
+
+// Exportando rotas
+module.exports = routers
