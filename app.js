@@ -177,7 +177,16 @@ app.get('/', (req,res)=>{
         
     })
 
-
+    // EXIBIR IMAGEM
+    app.get('/imagem/:id', (req,res)=>{
+        try{
+            res.sendFile(__dirname+'/upload/'+req.params.id)
+            console.log(req.params.id)
+        } catch(erro){
+            res.redirect('/')
+            console.log(erro)
+        }
+    })
 
 /* SAIDA */
 const PORT = process.env.PORT || 8085
