@@ -2,10 +2,13 @@ const express = require('express')
 const fs = require('fs').promises;
 const { v4: uuidv4 } = require('uuid');
 const routers = express.Router()
-
 const ROOT_PATH = require('app-root-path').path 
-const URL_API = process.env.URL_API + process.env.PORT + '/upload/'
 
+// CONDIÇÃO CASO ESTEJA EM LOCALHOST OU HOSPEDADO
+let URL_API
+process.env.URL_API !== 'http://localhost:' ? 
+URL_API = process.env.URL_API + '/upload/' : 
+URL_API = process.env.URL_API + process.env.PORT + '/upload/';
 
 // DATABASE
 const connectionDataBase = require('./database')
