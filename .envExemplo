@@ -1,0 +1,6 @@
+URL_API = http://localhost:
+PORT = 8181
+HOST_DATABASE = valor
+USER_DATABASE = valor
+PASSWORD_DATABASE = valor
+SCHEMA_DATABASE = valor

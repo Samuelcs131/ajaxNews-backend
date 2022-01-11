@@ -1,20 +1,13 @@
 ## Iniciar projeto em servidor local
 
-Primeiro, instale as dependencias:
+1 - Instale as dependências:
 
 ``npm i``
 
-Em seguida inicie o servidor de desenvolvimento:
+2 - Defina as variáveis de ambiente:
+- Renomeie o arquivo .envExemplo para .env
+- Defina um valor para as variaveis
+
+3 - Inicie o servidor em modo desenvolvedor:
 
 ``npm run dev``
-
-Defina as variaveis de ambiente
-- Crie um arquivo na pasta raiz .env
-- Sigua a estrura abaixo
-
-URL_API = http://localhost:
-PORT = 8181
-HOST_DATABASE = valor
-USER_DATABASE = valor
-PASSWORD_DATABASE = valor
-SCHEMA_DATABASE = valor
