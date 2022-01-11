@@ -13,6 +13,7 @@ connectionDataBase.connect(
     (erro)=> {
     if(erro){
         global.conectDB
+        console.log('Banco desconectado!!!!!!!')
     } else {
         console.log('Banco conectado!')
     }
