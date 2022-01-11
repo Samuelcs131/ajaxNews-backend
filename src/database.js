@@ -1,24 +1,22 @@
 const mysql = require('mysql2');
 
-if(global.conectDB && global.conectDB.state !== 'disconected'){
-    return global.conectDB
-}
+module.exports = async function connection(){
+
 const connectionDataBase = mysql.createConnection({
     host     : process.env.HOST_DATABASE,
     user     : process.env.USER_DATABASE,
     password : process.env.PASSWORD_DATABASE,
     database : process.env.SCHEMA_DATABASE
 })
+
 connectionDataBase.connect( 
     (erro)=> {
     if(erro){
-        global.conectDB
-        console.log('Banco desconectado!!!!!!!')
+        console.log('Falha ao se conectar com o banco!')
     } else {
         console.log('Banco conectado!')
     }
 })
-global.conectDB = connectionDataBase
 
-
-module.exports = connectionDataBase
+return connectionDataBase
+}
