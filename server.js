@@ -15,9 +15,22 @@ const PORT_SERVER = process.env.PORT
 
 
 
-/* ROTAS */ 
+/* ROTAS */
 const routeMain = require('./src/routes')
-app.use('/', routeMain)
+app.use('/ajaxNews', routeMain)
+
+app.get('/', (req,res) =>{ 
+    res.send
+    (`
+                <h1>API AjaxNews</h1> 
+                <hr>
+                <p><b>GET - Consultar</b> todos os artigos - /ajaxNews/artigos</p>
+                <p><b>GET - Consultar</b> um artigo específico - /ajaxNews/artigos/:idArtigo</p>
+                <p><b>POST - Cadastrar</b> um artigo - /ajaxNews/artigos</p>
+                <p><b>PUT - Atualizar</b> um artigo específico - /ajaxNews/artigos/:idArtigo</p>
+                <p><b>DELETE - Deletar</b> um artigo específico - /ajaxNews/artigos/:idArtigo</p>
+    `) 
+})
 
 /* SAIDA */
 app.listen(PORT_SERVER, ()=>{

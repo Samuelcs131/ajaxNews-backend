@@ -23,8 +23,59 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         res.send('API funcionando!')
     })
 
-    // NOVO CADASTRO
-    routers.post('/cadastro/artigo', async (req,res)=>{
+  
+
+    // GET - Consultar todos os artigos
+    routers.get('/artigos', async(req,res)=>{
+
+        let querySQL = "SELECT * FROM artigos"
+
+        connectionDataBase.query(querySQL, (erro, result)=> {
+            if(erro){
+                res.status(400).send('Erro ao procurar')
+            } else {
+                let response = result.map( (artigo => {
+                    return({
+                        id: artigo.id_artigo,
+                        titulo: artigo.titulo,
+                        descricao: artigo.descricao,
+                        categoria: artigo.categoria,
+                        texto: artigo.texto,
+                        autor: artigo.autor,
+                        imagem: URL_API + artigo.imagem,
+                        dataCriacao: artigo.dataCriacao,
+                        dataAtualizacao: artigo.dataAtualizacao
+                    })
+                }))
+
+                res.status(200).send(response)
+            }
+        })
+    })
+
+    // GET - Consultar um artigo específico
+    routers.get('/artigos/:id', async(req,res)=>{
+        let parameterSearch = req.params.id.toLowerCase()
+
+        let querySQL = "SELECT * FROM artigos"
+
+        connectionDataBase.query(querySQL, (erro, result)=> {
+            if(erro){
+                res.status(400).send('Erro ao procurar')
+            } else {
+                let response = result.filter( (artigo => {
+                    return( 
+                        artigo.titulo.toLowerCase().includes(parameterSearch)
+                    )
+                }))
+
+                res.status(200).send(response)
+            }
+        })
+    })
+
+    // POST - Cadastrar um artigo
+    routers.post('/artigos', async (req,res)=>{
 
         try{
         
@@ -87,76 +138,21 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         }
     })
 
-    // CONSULTAR TODOS ARTIGOS
-    routers.get('/artigos', async(req,res)=>{
-
-        let querySQL = "SELECT * FROM artigos"
-
-        connectionDataBase.query(querySQL, (erro, result)=> {
-            if(erro){
-                res.status(400).send('Erro ao procurar')
-            } else {
-                let response = result.map( (artigo => {
-                    return({
-                        id: artigo.id_artigo,
-                        titulo: artigo.titulo,
-                        descricao: artigo.descricao,
-                        categoria: artigo.categoria,
-                        texto: artigo.texto,
-                        autor: artigo.autor,
-                        imagem: URL_API + artigo.imagem,
-                        dataCriacao: artigo.dataCriacao,
-                        dataAtualizacao: artigo.dataAtualizacao
-                    })
-                }))
-
-                res.status(200).send(response)
-            }
-        })
-    })
-
-    // CONSULTAR ARTIGO POR ID
-    routers.get('/artigo/:id', async(req,res)=>{
-
-        let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
-        
-        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
-            if(erro){
-                res.status(400).send('Erro ao procurar')
-            } else {
-                res.status(200).send(result)
-            }
-        })
-    })
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // DELETAR ARTIGO
-    routers.delete('/deletar/artigo/:id', async(req,res)=>{
+    // DELETE - Deletar um artigo específico
+    routers.delete('/artigos/:id', async(req,res)=>{
 
         // PESQUISA ID IMAGEM
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
 
         connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
-            if(erro){
+            if(erro || result.length == 0 || result == 'undefined'){
                 res.status(400).send('Erro ao encontrar o artigo')
                 console.log('Erro ao encontrar o artigo')
             } else {
 
                 // APAGA FOTO
                 let idImg = result[0].imagem 
-                let deletedFileImg = async () => await fs.unlink(`../upload/${idImg}`)
+                let deletedFileImg = async () => await fs.unlink(ROOT_PATH+`/upload/${idImg}`)
 
                 // APAGA ARTIGO
                 querySQL = "DELETE FROM artigos WHERE id_artigo = ?"
@@ -177,41 +173,62 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         })
     })
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-    // ATUALIZAR ARTIGO
-    routers.put('/atualizar/artigo/:id', async(req,res)=>{
-
+    // PUT - Atualizar um artigo específico
+    routers.put('/artigos/:id', (req,res)=>{
+        // ENTRADAS
         const {titulo, descricao, categoria, texto, autor} = req.body
         const {imagem} = req.files || 0
         const dataAtualizacao = year + '-' + month + '-' + day
-
-        let querySQL = "UPDATE noticias SET titulo = ?, descricao = ?, categoria = ?, texto = ?, autor = ?, dataAtualizacao = ? WHERE id_artigo = ?"
-
-        connectionDataBase.query(querySQL, [titulo, descricao, categoria, texto, autor, imagem, dataAtualizacao], (erro, result)=>{
-        if(erro){
-        console.log('Erro ao atualizar!')
-        res.status(400).send('Erro ao atualizar!')
-        } else {
-        console.log('Artigo atualizado com sucesso!')
-        res.status(200).send('Artigo atualizado com sucesso!')
-        }
-        })
         
-    })
+        // TRATAMENTO IMG
+        const imageUpload = uuidv4(imagem.name) + '.' + imagem.mimetype.split('/')[1]
+        
+        // PESQUISA ID IMAGEM
+        let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
 
+        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
+            if(erro || result.length == 0 || result == 'undefined'){
+                res.status(400).send('Artigo não encontrado!')
+                console.log('Artigo não encontrado!')
+            } else {
+                // APAGA FOTO
+                let idImg = result[0].imagem 
+                let deletedFileImg = async () => await fs.unlink(ROOT_PATH+`/upload/${idImg}`)
+
+                // CAMPOS
+                let errosEnvios = [];
+
+                if(!imagem || Object.keys(imagem).length == 0 || imagem.mimetype.split('/')[0] != 'image'){
+                    errosEnvios.push({erro: 'Erro ao enviar a imagem'})
+                }
+
+                if(
+                    titulo == undefined || titulo == '' || 
+                    descricao == undefined || descricao == '' || 
+                    categoria == undefined || categoria == '' || 
+                    texto == undefined || texto == '' || 
+                    autor == undefined || autor == ''
+                ){
+                    errosEnvios.push({erro: 'Erro em um dos textos'})
+                }
+
+                // APAGA ARTIGO
+                querySQL = "UPDATE artigos SET titulo = ?, descricao = ?, categoria = ?, texto = ?, autor = ?, imagem = ?, dataAtualizacao = ? WHERE id_artigo = ?"
+
+                connectionDataBase.query(querySQL, [titulo, descricao, categoria, texto, autor, imageUpload, dataAtualizacao, req.params.id], (erro, result)=>{
+                    if(erro){
+                        console.log(erro)
+                        res.status(400).send('Houve um erro ao cadastrar!')
+                    } else {
+                        // APAGANDO FOTO ANTIGA
+                        deletedFileImg()
+                        imagem.mv(ROOT_PATH+`/upload/${imageUpload}`)
+                        res.status(200).send('Atualizado com sucesso!')
+                    }
+                })
+            }
+        })
+    })
 
 
 
