@@ -1,3 +1,8 @@
-# dependencies
+## DEPENDENCIAS ##
 /node_modules
-/.env
+
+## VARIAVEIS DE AMBIENTE ##
+*.env
+
+## ARQUIVOS UPLOAD ##
+/upload/*
