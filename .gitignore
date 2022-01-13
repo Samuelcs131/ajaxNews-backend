@@ -1,10 +1,7 @@
-/.vscode
+.vscode
 
 ## DEPENDENCIAS ##
 /node_modules
 
 ## VARIAVEIS DE AMBIENTE ##
 *.env
-
-## ARQUIVOS UPLOAD ##
-/upload/*
