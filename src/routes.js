@@ -1,8 +1,5 @@
-const express = require('express')
-const fs = require('fs').promises;
-const { v4: uuidv4 } = require('uuid');
+const express = require('express') 
 const routers = express.Router()
-const ROOT_PATH = require('app-root-path').path
 const multer = require('multer')
 const  { multerConfig, removeImage} = require('./config/multer')
 
