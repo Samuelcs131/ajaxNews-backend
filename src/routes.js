@@ -18,6 +18,11 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
 
 // ROUTES
 
+    routers.post('/test', multer(multerConfig).single('imagem'), async(req,res)=>{
+        res.status(200).send('Imagem salva')
+        console.log('Imagem salva')
+    })
+
      // POST - Cadastrar um artigo
     routers.post('/artigos', multer(multerConfig).single('imagem'), async(req, res)=>{
         try {
@@ -27,7 +32,7 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
             const imageUpload = req.file.filename || req.file.key
             const dataCriacao = year + '-' + month + '-' + day
             const dataAtualizacao = dataCriacao
-
+ 
             // CAMPOS
             let errosEnvios = [];
 
@@ -57,20 +62,20 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                         console.log('Cadastrado com sucesso!')
                     } else { 
                         connectionDataBase.destroy();
-                        res.status(400).send('Erro ao enviar!')
+                        res.status(400).send('Erro ao enviar 3!')
                         console.log(erro)
                     }
 
                 })
 
             } else {
-                console.log('Erro ao cadastrar')
+                console.log('Erro ao cadastrar 2')
                 connectionDataBase.destroy();
                 return res.status(400).send(errosEnvios)
             }
 
         } catch(error) {
-            console.log('Erro ao cadastrar')
+            console.log('Erro ao cadastrar 1')
             connectionDataBase.destroy();
             res.status(400).send('Houve um erro ao cadastrar! ' + error)
             
@@ -79,7 +84,8 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
     
     // GET - Consultar todos os artigos
     routers.get('/artigos', async(req,res)=>{
-        // CONEXAO COM BANCO
+       try{
+            // CONEXAO COM BANCO
         connectionDataBase = await conectDataBase()
 
         let querySQL = "SELECT * FROM artigos"
@@ -107,6 +113,11 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                 connectionDataBase.destroy();
             }
         })
+       } catch(erro){
+        connectionDataBase.destroy();
+        console.log('Erro ao buscar')
+        res.status(400).send('Erro ao buscar')
+    }
     }) 
     
     // GET - Consultar um artigo específico por titulo
@@ -114,7 +125,7 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         // CONEXAO COM BANCO
         connectionDataBase = await conectDataBase()
         
-        let searchNews  = (req.query.searchNews).toLocaleLowerCase()
+        let searchNews  = (req.query.titulo).toLocaleLowerCase()
   
         let querySQL = "SELECT * FROM artigos"
 
@@ -123,31 +134,36 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                 connectionDataBase.destroy();
                 res.status(400).send('Erro ao procurar')
             } else {
-                let response = result.filter( artigo => artigo.titulo.toLowerCase().includes(searchNews) )
+                let response = result.filter( artigo => {
+                    return (artigo.titulo.toLowerCase().includes(searchNews))
+                }).map( artigo => {
+                    return ({id: artigo.id_artigo,
+                        titulo: artigo.titulo,
+                        descricao: artigo.descricao,
+                        categoria: artigo.categoria,
+                        texto: artigo.texto,
+                        autor: artigo.autor,
+                        imagem: URL_API + artigo.imagem,
+                        dataCriacao: artigo.dataCriacao,
+                        dataAtualizacao: artigo.dataAtualizacao})
+                })
                 connectionDataBase.destroy();
-                res.status(200).send({
-                    id: response[0].id_artigo,
-                    titulo: response[0].titulo,
-                    descricao: response[0].descricao,
-                    categoria: response[0].categoria,
-                    texto: response[0].texto,
-                    autor: response[0].autor,
-                    imagem: URL_API + response[0].imagem,
-                    dataCriacao: response[0].dataCriacao,
-                    dataAtualizacao: response[0].dataAtualizacao
-                }) 
+                res.status(200).send(response)
             }
         })
     })
  
     // GET - Consultar um artigo específico por ID
     routers.get('/artigos/id/:id', async(req,res)=>{
-        // CONEXAO COM BANCO
+        try {
+            // CONEXAO COM BANCO
         connectionDataBase = await conectDataBase()
+
+        const {id} = req.params
 
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
 
-        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
+        connectionDataBase.query(querySQL, [id],(erro, result)=> {
             if(erro){
                 connectionDataBase.destroy();
                 res.status(400).send('Erro ao procurar')
@@ -166,16 +182,24 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                 })
             }
         })
+        } catch(erro) {
+            connectionDataBase.destroy();
+            console.log('Erro ao pesquisar ou conectar ao banco')
+            res.status(400).send('Erro ao pesquisar ou conectar ao banco')
+        }
     })
 
     // GET - Consultar um artigo específico por categoria
     routers.get('/artigos/categoria/:id', async(req,res)=>{
-        // CONEXAO COM BANCO
+        try{
+            // CONEXAO COM BANCO
         connectionDataBase = await conectDataBase()
+
+        const {id} = req.params
 
         let querySQL = "SELECT * FROM artigos WHERE categoria = ?"
 
-        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
+        connectionDataBase.query(querySQL, [id],(erro, result)=> {
             if(erro){
                 connectionDataBase.destroy();
                 res.status(400).send('Erro ao procurar!')
@@ -198,30 +222,34 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                 res.status(200).send(response)
             }
         })
+        }catch(erro){
+            connectionDataBase.destroy();
+            res.status(400).send('Erro ao pesquisar')
+            console.log('Erro ao pesquisar')
+        }
     })
  
     // PUT - Atualizar um artigo específico
-    routers.put('/artigos/:id', multer(multerConfig).single('imagem'), async (req,res) => {
+    routers.put('/artigos/:id', async (req,res) => {
         try{
             // CONEXAO AO BANCO DE DADOS
         connectionDataBase = await conectDataBase()
 
+        const {id} = req.params
+
         // ENTRADAS
         const {titulo, descricao, categoria, texto, autor} = req.body
-        const imageUpload = req.file.filename || req.file.key
         const dataAtualizacao = year + '-' + month + '-' + day
- 
+     
         // PESQUISA ID IMAGEM
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
 
-        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
+        connectionDataBase.query(querySQL, [id],(erro, result)=> {
             if(erro || result.length == 0 || result == 'undefined'){ 
                 connectionDataBase.destroy();
                 res.status(400).send('Artigo não encontrado!')
                 console.log('Artigo não encontrado!')
             } else {
-                // APAGA FOTO
-                let idImg = result[0].imagem
 
                 // CAMPOS
                 let errosEnvios = [];
@@ -230,26 +258,32 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                     errosEnvios.push({erro: 'Erro em um dos textos'})
                 }
 
-                // APAGA ARTIGO
-                querySQL = "UPDATE artigos SET titulo = ?, descricao = ?, categoria = ?, texto = ?, autor = ?, imagem = ?, dataAtualizacao = ? WHERE id_artigo = ?"
+                if(errosEnvios.length == 0){
+                    // APAGA ARTIGO
+                querySQL = "UPDATE artigos SET titulo = ?, descricao = ?, categoria = ?, texto = ?, autor = ?, dataAtualizacao = ? WHERE id_artigo = ?"
 
-                connectionDataBase.query(querySQL, [titulo, descricao, categoria, texto, autor, imageUpload, dataAtualizacao, req.params.id], (erro, result)=>{
+                connectionDataBase.query(querySQL, [titulo, descricao, categoria, texto, autor, dataAtualizacao, id], (erro, result)=>{
                     if(erro){
                         console.log(erro) 
                         connectionDataBase.destroy();
                         res.status(400).send('Houve um erro ao cadastrar!')
                     } else {
-                        // APAGANDO FOTO ANTIGA
-                        removeImage(idImg)
                         connectionDataBase.destroy();
+                        console.log('Atualizado com sucesso!')
                         res.status(200).send('Atualizado com sucesso!')
                     }
                 })
+                } else {
+                    connectionDataBase.destroy()
+                    console.log(errosEnvios)
+                    res.status(400).send(errosEnvios)
+                }
             }
         })
-        } catch(eror) {
-            console.log('Erro ao atualizar')
-            res.send('Erro ao atualizar')
+        } catch(erro) {
+            connectionDataBase.destroy();
+            console.log('Erro ao atualizar 1'+ erro)
+            res.status(400).send('Erro ao atualizar 1')
         }
     })
 
@@ -259,10 +293,12 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         // CONEXAO COM O BANCO DE DADOS
         connectionDataBase = await conectDataBase() 
 
+        const {id} = req.params
+
         // PESQUISA ID IMAGEM
         let querySQL = "SELECT * FROM artigos WHERE id_artigo = ?"
 
-        connectionDataBase.query(querySQL, [req.params.id],(erro, result)=> {
+        connectionDataBase.query(querySQL, [id],(erro, result)=> {
             if(erro || result.length == 0 || result == 'undefined'){
                 connectionDataBase.destroy();
                 res.status(400).send('Erro ao encontrar o artigo')
@@ -274,7 +310,7 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
                 // APAGA ARTIGO
                 querySQL = "DELETE FROM artigos WHERE id_artigo = ?"
 
-                connectionDataBase.query(querySQL, [req.params.id], (erro, result)=>{
+                connectionDataBase.query(querySQL, [id], (erro, result)=>{
                     if(erro){
                         console.log(erro) 
                         connectionDataBase.destroy();
@@ -297,6 +333,8 @@ let [day,year,month] = [dataNow({day: 'numeric'}), dataNow({year: 'numeric'}),da
         }
         
     }) 
+ 
+ 
 
 // Exportando rotas
 module.exports = routers
